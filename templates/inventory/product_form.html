@@ -1,0 +1,306 @@
+{% extends 'base/base.html' %}
+{% load breadcrumbs %}
+
+{% block title %}{% if object %}Edit Product{% else %}Add Product{% endif %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Breadcrumbs -->
+    {% breadcrumbs %}
+    
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">
+            {% if object %}Edit Product{% else %}Add New Product{% endif %}
+        </h1>
+        <nav class="text-sm text-gray-600 mt-2">
+            <a href="{% url 'inventory:dashboard' %}" class="hover:text-blue-600">Dashboard</a>
+            <span class="mx-2">/</span>
+            <a href="{% url 'inventory:product_list' %}" class="hover:text-blue-600">Products</a>
+            <span class="mx-2">/</span>
+            <span>{% if object %}Edit{% else %}Add{% endif %}</span>
+        </nav>
+    </div>
+
+    <div class="bg-white shadow rounded-lg p-6">
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Product Name -->
+            <div>
+                <label for="id_name" class="block text-sm font-medium text-gray-700 mb-2">
+                    Product Name *
+                </label>
+                <input type="text" 
+                       name="name" 
+                       id="id_name" 
+                       value="{{ form.name.value|default:'' }}"
+                       required
+                       minlength="2"
+                       maxlength="200"
+                       pattern="[A-Za-z0-9\s\-_.]+"
+                       title="Product name can only contain letters, numbers, spaces, hyphens, underscores, and periods"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                {% if form.name.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.name.errors.0 }}</p>
+                {% endif %}
+                <p class="text-xs text-gray-500 mt-1">2-200 characters. Letters, numbers, and basic punctuation only.</p>
+            </div>
+
+            <!-- Product Image -->
+            <div>
+                <label for="id_image" class="block text-sm font-medium text-gray-700 mb-2">
+                    Product Image
+                </label>
+                {% if object.image %}
+                    <div class="mb-4">
+                        <img src="{{ object.image.url }}" alt="{{ object.name }}" class="w-32 h-32 object-cover rounded-lg border">
+                        <p class="text-sm text-gray-600 mt-2">Current image</p>
+                    </div>
+                {% endif %}
+                <input type="file" 
+                       name="image" 
+                       id="id_image" 
+                       accept="image/*"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                {% if form.image.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.image.errors.0 }}</p>
+                {% endif %}
+                <p class="text-xs text-gray-500 mt-1">
+                    Upload any size image - it will be automatically resized to 300x300px. Max file size: 5MB
+                    <br>Supported formats: JPG, PNG, GIF, WebP
+                </p>
+            </div>
+
+            <!-- Price -->
+            <div>
+                <label for="id_selling_price" class="block text-sm font-medium text-gray-700 mb-2">
+                    Selling Price *
+                </label>
+                <div class="relative">
+                    <span class="absolute left-3 top-2 text-gray-500">₱</span>
+                    <input type="number" 
+                           name="selling_price" 
+                           id="id_selling_price" 
+                           value="{{ form.selling_price.value|default:'' }}"
+                           step="0.01"
+                           min="0.01"
+                           max="99999.99"
+                           required
+                           class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                {% if form.selling_price.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.selling_price.errors.0 }}</p>
+                {% endif %}
+                <p class="text-xs text-gray-500 mt-1">Enter price between ₱0.01 and ₱99,999.99</p>
+            </div>
+
+            <!-- Quantity -->
+            <div>
+                <label for="id_stock_quantity" class="block text-sm font-medium text-gray-700 mb-2">
+                    Stock Quantity *
+                </label>
+                <input type="number" 
+                       name="stock_quantity" 
+                       id="id_stock_quantity" 
+                       value="{{ form.stock_quantity.value|default:'' }}"
+                       min="0"
+                       max="999999"
+                       required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                {% if form.stock_quantity.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.stock_quantity.errors.0 }}</p>
+                {% endif %}
+                <p class="text-xs text-gray-500 mt-1">Enter quantity from 0 to 999,999</p>
+            </div>
+
+            <!-- Category -->
+            <div>
+                <label for="id_category" class="block text-sm font-medium text-gray-700 mb-2">
+                    Category
+                </label>
+                <select name="category" 
+                        id="id_category"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">-- Select Category --</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" {% if form.category.value == category.id %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% if form.category.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.category.errors.0 }}</p>
+                {% endif %}
+                <p class="text-xs text-gray-500 mt-1">
+                    <a href="{% url 'inventory:category_list' %}" class="text-blue-600 hover:underline">Edit Categories</a>
+                </p>
+            </div>
+
+            <!-- Hidden fields with default values -->
+            <input type="hidden" name="cost_price" value="{{ form.selling_price.value|default:'0' }}">
+            <input type="hidden" name="minimum_stock" value="5">
+            <input type="hidden" name="is_active" value="true">
+
+            <!-- Form Actions -->
+            <div class="flex justify-end space-x-3 pt-6 border-t">
+                <a href="{% url 'inventory:product_list' %}" 
+                   class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition duration-200">
+                    Cancel
+                </a>
+                <button type="submit" 
+                        class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200">
+                    {% if object %}Update Product{% else %}Create Product{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Real-time form validation
+    const form = document.querySelector('form');
+    const nameInput = document.getElementById('id_name');
+    const priceInput = document.getElementById('id_selling_price');
+    const quantityInput = document.getElementById('id_stock_quantity');
+    const imageInput = document.getElementById('id_image');
+    
+    // Name validation
+    nameInput.addEventListener('input', function() {
+        const value = this.value.trim();
+        const errorElement = this.parentNode.querySelector('.text-red-600');
+        
+        if (value.length < 2) {
+            showFieldError(this, 'Product name must be at least 2 characters long');
+        } else if (value.length > 200) {
+            showFieldError(this, 'Product name cannot exceed 200 characters');
+        } else if (!/^[A-Za-z0-9\s\-_.]+$/.test(value)) {
+            showFieldError(this, 'Product name can only contain letters, numbers, spaces, and basic punctuation');
+        } else {
+            hideFieldError(this);
+        }
+    });
+    
+    // Price validation
+    priceInput.addEventListener('input', function() {
+        const value = parseFloat(this.value);
+        
+        if (isNaN(value) || value <= 0) {
+            showFieldError(this, 'Price must be greater than ₱0');
+        } else if (value > 99999.99) {
+            showFieldError(this, 'Price cannot exceed ₱99,999.99');
+        } else {
+            hideFieldError(this);
+        }
+    });
+    
+    // Quantity validation
+    quantityInput.addEventListener('input', function() {
+        const value = parseInt(this.value);
+        
+        if (isNaN(value) || value < 0) {
+            showFieldError(this, 'Quantity cannot be negative');
+        } else if (value > 999999) {
+            showFieldError(this, 'Quantity cannot exceed 999,999');
+        } else {
+            hideFieldError(this);
+        }
+    });
+    
+    // Image validation
+    imageInput.addEventListener('change', function() {
+        const file = this.files[0];
+        
+        if (file) {
+            // Check file size (5MB limit)
+            if (file.size > 5 * 1024 * 1024) {
+                showFieldError(this, 'Image file must be smaller than 5MB');
+                this.value = '';
+                return;
+            }
+            
+            // Check file type
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+            if (!allowedTypes.includes(file.type)) {
+                showFieldError(this, 'Please select a valid image file (JPEG, PNG, GIF, or WebP)');
+                this.value = '';
+                return;
+            }
+            
+            hideFieldError(this);
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.createElement('img');
+                preview.src = e.target.result;
+                preview.className = 'w-32 h-32 object-cover rounded-lg border mt-2';
+                preview.alt = 'Preview';
+                
+                // Remove existing preview
+                const existingPreview = imageInput.parentNode.querySelector('img[alt="Preview"]');
+                if (existingPreview) {
+                    existingPreview.remove();
+                }
+                
+                imageInput.parentNode.appendChild(preview);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+        let hasErrors = false;
+        
+        // Validate all fields
+        const nameValue = nameInput.value.trim();
+        const priceValue = parseFloat(priceInput.value);
+        const quantityValue = parseInt(quantityInput.value);
+        
+        if (!nameValue || nameValue.length < 2 || nameValue.length > 200) {
+            showFieldError(nameInput, 'Please enter a valid product name (2-200 characters)');
+            hasErrors = true;
+        }
+        
+        if (isNaN(priceValue) || priceValue <= 0 || priceValue > 99999.99) {
+            showFieldError(priceInput, 'Please enter a valid price (₱0.01 - ₱99,999.99)');
+            hasErrors = true;
+        }
+        
+        if (isNaN(quantityValue) || quantityValue < 0 || quantityValue > 999999) {
+            showFieldError(quantityInput, 'Please enter a valid quantity (0 - 999,999)');
+            hasErrors = true;
+        }
+        
+        if (hasErrors) {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    });
+    
+    function showFieldError(field, message) {
+        hideFieldError(field);
+        field.classList.add('border-red-500', 'focus:ring-red-500');
+        field.classList.remove('border-gray-300', 'focus:ring-blue-500');
+        
+        const errorElement = document.createElement('p');
+        errorElement.className = 'text-red-600 text-sm mt-1 validation-error';
+        errorElement.textContent = message;
+        field.parentNode.appendChild(errorElement);
+    }
+    
+    function hideFieldError(field) {
+        field.classList.remove('border-red-500', 'focus:ring-red-500');
+        field.classList.add('border-gray-300', 'focus:ring-blue-500');
+        
+        const existingError = field.parentNode.querySelector('.validation-error');
+        if (existingError) {
+            existingError.remove();
+        }
+    }
+});
+</script>
+{% endblock %}

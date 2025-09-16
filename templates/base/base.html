@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ company_name|default:"Inventory POS" }}{% endblock %}</title>
+    
+    <!-- Favicon -->
+    {% load static %}
+    <link rel="icon" type="image/png" href="{% static 'images/supermarket.png' %}">
+    <link rel="shortcut icon" type="image/png" href="{% static 'images/supermarket.png' %}">
+    
+    <!-- Tailwind CSS via CDN (for development) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            bg: '#1a202c',
+                            surface: '#2d3748',
+                            border: '#4a5568',
+                            text: '#e2e8f0',
+                            muted: '#a0aec0'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <style>
+        /* Dark mode CSS variables */
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --surface-color: #f9fafb;
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --accent-color: #8b5cf6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .dark {
+            --bg-color: #0f1419;
+            --text-color: #ffffff;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --surface-color: #1e293b;
+            --primary-color: #3b82f6;
+            --primary-hover: #60a5fa;
+            --accent-color: #a78bfa;
+            --success-color: #34d399;
+            --warning-color: #fbbf24;
+            --error-color: #f87171;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Global smooth transitions */
+        * {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Apply dark mode styles */
+        .dark body {
+            background: linear-gradient(135deg, #0f1419 0%, #1e293b 100%) !important;
+            color: var(--text-color) !important;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+        
+        /* Background colors */
+        .dark .bg-white {
+            background: linear-gradient(145deg, #1e293b, #334155) !important;
+            border: 1px solid var(--border-color);
+        }
+        
+        .dark .bg-gray-50,
+        .dark .bg-gray-100 {
+            background: linear-gradient(145deg, #334155, #475569) !important;
+        }
+        
+        .dark .bg-gray-200 {
+            background-color: #475569 !important;
+        }
+        
+        /* Text colors - Modern dark mode approach */
+        .dark .text-gray-900,
+        .dark .text-gray-800,
+        .dark .text-gray-700 {
+            color: var(--text-color) !important;
+            font-weight: 500 !important;
+        }
+        
+        .dark .text-gray-600 {
+            color: var(--text-muted) !important;
+            font-weight: 500 !important;
+        }
+        
+        .dark .text-gray-500 {
+            color: var(--text-muted) !important;
+            font-weight: 400 !important;
+        }
+        
+        .dark .text-muted {
+            color: var(--text-muted) !important;
+            font-weight: 500 !important;
+        }
+        
+        /* Borders */
+        .dark .border-gray-200,
+        .dark .border-gray-300 {
+            border-color: var(--border-color) !important;
+        }
+        
+        .dark .border-t {
+            border-color: var(--border-color) !important;
+        }
+        
+        /* Shadows - Enhanced for dark mode */
+        .dark .shadow-lg {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3) !important;
+        }
+        
+        .dark .shadow-md {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.25) !important;
+        }
+        
+        .dark .shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2) !important;
+        }
+        
+        /* Form elements */
+        .dark .form-control,
+        .dark input,
+        .dark textarea,
+        .dark select {
+            background-color: var(--surface-color) !important;
+            color: var(--text-color) !important;
+            border-color: var(--border-color) !important;
+        }
+        
+        .dark .form-control:focus,
+        .dark input:focus,
+        .dark textarea:focus,
+        .dark select:focus {
+            background-color: var(--surface-color) !important;
+            color: var(--text-color) !important;
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+        }
+        
+        /* Buttons */
+        .dark .btn-outline-secondary {
+            color: var(--text-color) !important;
+            border-color: var(--border-color) !important;
+        }
+        
+        .dark .btn-outline-secondary:hover {
+            background-color: var(--border-color) !important;
+            color: var(--text-color) !important;
+        }
+        
+        /* Tables */
+        .dark .table {
+            color: var(--text-color) !important;
+        }
+        
+        .dark .table th {
+            color: var(--text-color) !important;
+            font-weight: 600 !important;
+            border-color: var(--border-color) !important;
+        }
+        
+        .dark .table td {
+            color: var(--text-color) !important;
+            border-color: var(--border-color) !important;
+        }
+        
+        /* Cards and sections */
+        .dark .card,
+        .dark .profile-section,
+        .dark .profile-edit-section {
+            background-color: var(--surface-color) !important;
+            border-color: var(--border-color) !important;
+        }
+        
+        /* Navigation */
+        .dark nav {
+            background-color: var(--surface-color) !important;
+            border-color: var(--border-color) !important;
+        }
+        
+        /* Hover effects */
+        .dark .hover\\:bg-gray-100:hover {
+            background-color: #334155 !important;
+        }
+        
+        .dark .hover\\:bg-gray-50:hover {
+            background-color: #334155 !important;
+        }
+
+        /* Navigation dropdown styles for dark mode */
+        .dark .group:hover .bg-white {
+            background: linear-gradient(145deg, #1e293b, #334155) !important;
+            border: 1px solid var(--border-color) !important;
+        }
+        
+        .dark .group .bg-white {
+            background: linear-gradient(145deg, #1e293b, #334155) !important;
+            border: 1px solid var(--border-color) !important;
+        }
+        
+        .dark .group .text-gray-700 {
+            color: var(--text-color) !important;
+        }
+        
+        .dark .group .hover\\:bg-gray-100:hover {
+            background-color: #334155 !important;
+            color: var(--text-color) !important;
+        }
+        
+        /* Activity items */
+        .dark .activity-item {
+            background-color: var(--surface-color) !important;
+            border-left-color: var(--primary-color) !important;
+        }
+        
+        .dark .activity-item:hover {
+            background-color: #334155 !important;
+        }
+
+        /* Navigation specific dark mode fixes */
+        .dark nav .bg-white {
+            background: linear-gradient(145deg, #1e293b, #334155) !important;
+            border-color: var(--border-color) !important;
+        }
+        
+        .dark .shadow-lg {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2) !important;
+        }
+        
+        /* Dropdown menu items */
+        .dark .group-hover\\:opacity-100 {
+            background: linear-gradient(145deg, #1e293b, #334155) !important;
+            border: 1px solid var(--border-color) !important;
+        }
+        
+        .dark .group-hover\\:opacity-100 a {
+            color: var(--text-color) !important;
+        }
+        
+        .dark .group-hover\\:opacity-100 a:hover {
+            background-color: #475569 !important;
+            color: var(--text-color) !important;
+        }
+
+        /* More specific dropdown targeting */
+        .dark .group .absolute.bg-white {
+            background: linear-gradient(145deg, #1e293b, #334155) !important;
+            border: 1px solid var(--border-color) !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3) !important;
+        }
+        
+        .dark .group .absolute.bg-white a {
+            color: var(--text-color) !important;
+        }
+        
+        .dark .group .absolute.bg-white a:hover {
+            background-color: #475569 !important;
+            color: var(--text-color) !important;
+        }
+        
+        /* Stats cards gradient override for dark mode */
+        .dark .stat-card {
+            background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%) !important;
+            color: white !important;
+        }
+        
+        /* Alerts */
+        .dark .alert-success {
+            background-color: #064e3b !important;
+            color: var(--success-color) !important;
+            border-color: #059669 !important;
+        }
+        
+        .dark .alert-danger {
+            background-color: #7f1d1d !important;
+            color: var(--error-color) !important;
+            border-color: #dc2626 !important;
+        }
+        
+        .dark .alert-warning {
+            background-color: #78350f !important;
+            color: var(--warning-color) !important;
+            border-color: #d97706 !important;
+        }
+        
+        .dark .alert-info {
+            background-color: #1e3a8a !important;
+            color: #60a5fa !important;
+            border-color: #2563eb !important;
+        }
+
+        /* Low Stock Alert specific styling */
+        .dark .bg-red-50 {
+            background: linear-gradient(145deg, #7f1d1d, #991b1b) !important;
+            border-color: #dc2626 !important;
+        }
+        
+        .dark .border-red-200 {
+            border-color: #dc2626 !important;
+        }
+        
+        /* Fix text colors in alert items that use specific gray classes */
+        .dark .bg-red-50 .text-gray-900 {
+            color: #f8fafc !important;
+            font-weight: 600 !important;
+        }
+        
+        .dark .bg-red-50 .text-gray-600 {
+            color: #cbd5e1 !important;
+        }
+        
+        .dark .bg-red-50 .text-gray-500 {
+            color: #94a3b8 !important;
+        }
+
+        /* General alert text color fixes */
+        .dark .alert .text-red-700,
+        .dark .alert .text-yellow-700,
+        .dark .alert .text-green-700,
+        .dark .alert .text-blue-700 {
+            color: var(--text-color) !important;
+        }
+
+        /* Additional alert background fixes for dark mode */
+        .dark .bg-yellow-100 {
+            background: linear-gradient(145deg, #78350f, #92400e) !important;
+        }
+        
+        .dark .bg-green-100 {
+            background: linear-gradient(145deg, #064e3b, #065f46) !important;
+        }
+        
+        .dark .bg-blue-100 {
+            background: linear-gradient(145deg, #1e3a8a, #1e40af) !important;
+        }
+        
+        .dark .bg-red-100 {
+            background: linear-gradient(145deg, #7f1d1d, #991b1b) !important;
+        }
+
+        /* Border colors for alerts */
+        .dark .border-yellow-400 {
+            border-color: #d97706 !important;
+        }
+        
+        .dark .border-green-400 {
+            border-color: #059669 !important;
+        }
+        
+        .dark .border-blue-400 {
+            border-color: #2563eb !important;
+        }
+        
+        .dark .border-red-400 {
+            border-color: #dc2626 !important;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        /* ========== ENHANCED HOVER EFFECTS & ANIMATIONS ========== */
+        
+        /* Button Enhancements */
+        .btn, button, [class*="btn"] {
+            position: relative;
+            overflow: hidden;
+            transform: translateY(0);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 8px;
+        }
+        
+        .btn:before, button:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn:hover:before, button:hover:before {
+            left: 100%;
+        }
+        
+        .btn:hover, button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .btn:active, button:active {
+            transform: translateY(0);
+        }
+        
+        /* Primary Button Enhancements */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            border: none;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-hover), #1d4ed8);
+            color: white;
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        }
+        
+        .dark .btn-primary:hover {
+            box-shadow: 0 8px 25px rgba(96, 165, 250, 0.5);
+        }
+        
+        /* Outline Button Enhancements */
+        .btn-outline-primary, .btn-outline-secondary {
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            background: transparent;
+            position: relative;
+        }
+        
+        .btn-outline-primary:hover, .btn-outline-secondary:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+        }
+        
+        .dark .btn-outline-primary:hover, .dark .btn-outline-secondary:hover {
+            background: var(--primary-hover);
+            border-color: var(--primary-hover);
+            box-shadow: 0 8px 25px rgba(96, 165, 250, 0.4);
+        }
+        
+        /* Success/Danger Button Enhancements */
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-color), #059669);
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(135deg, #059669, #047857);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, var(--error-color), #dc2626);
+        }
+        
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        }
+        
+        /* Card/Section Hover Enhancements */
+        .card, .profile-section, .profile-edit-section {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 12px;
+        }
+        
+        .card:hover, .profile-section:hover, .profile-edit-section:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .dark .card:hover, 
+        .dark .profile-section:hover, 
+        .dark .profile-edit-section:hover {
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Navigation Link Enhancements */
+        nav a, .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        nav a:hover, .nav-link:hover {
+            transform: translateX(3px);
+        }
+        
+        nav a:before, .nav-link:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            transition: width 0.3s ease;
+        }
+        
+        nav a:hover:before, .nav-link:hover:before {
+            width: 100%;
+        }
+        
+        /* Dark Mode Toggle Button Enhancement */
+        #dark-mode-toggle, #mobile-dark-mode-toggle {
+            background: linear-gradient(145deg, #f8fafc, #e2e8f0);
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 8px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        #dark-mode-toggle:hover, #mobile-dark-mode-toggle:hover {
+            background: linear-gradient(145deg, #e2e8f0, #cbd5e1);
+            transform: rotate(180deg) scale(1.1);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+        
+        .dark #dark-mode-toggle, .dark #mobile-dark-mode-toggle {
+            background: linear-gradient(145deg, #374151, #4b5563);
+            border-color: #6b7280;
+        }
+        
+        .dark #dark-mode-toggle:hover, .dark #mobile-dark-mode-toggle:hover {
+            background: linear-gradient(145deg, #4b5563, #6b7280);
+            box-shadow: 0 8px 20px rgba(96, 165, 250, 0.4);
+        }
+        
+        /* Form Input Enhancements */
+        .form-control, input, textarea, select {
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        
+        .form-control:focus, input:focus, textarea:focus, select:focus {
+            transform: scale(1.02);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .dark .form-control:focus, 
+        .dark input:focus, 
+        .dark textarea:focus, 
+        .dark select:focus {
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+        }
+        
+        /* Product Card Hover Effects */
+        .product-card, [class*="product"] {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 12px;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .product-card:hover img {
+            transform: scale(1.1);
+            transition: transform 0.3s ease;
+        }
+        
+        /* Stat Card Enhancements */
+        .stat-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 15px;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        .dark .stat-card:hover {
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* ========== ANIMATIONS ========== */
+        
+        /* Floating Animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        /* Pulse Animation */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        /* Gradient Text Animation */
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .gradient-text {
+            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c);
+            background-size: 400% 400%;
+            animation: gradient 3s ease infinite;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Loading Spinner */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading {
+            animation: spin 1s linear infinite;
+        }
+        
+        /* Fade In Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        /* Scale In Animation */
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        .scale-in {
+            animation: scaleIn 0.4s ease-out;
+        }
+        
+        /* Mobile Menu Animation */
+        #mobile-menu {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        #mobile-menu.hidden {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        
+        #mobile-menu:not(.hidden) {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Dropdown Animation */
+        .dropdown-menu {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(-10px);
+            opacity: 0;
+        }
+        
+        .dropdown-menu.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        /* Profile Avatar Hover */
+        .profile-avatar {
+            transition: all 0.3s ease;
+        }
+        
+        .profile-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .dark .profile-avatar:hover {
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Activity Item Hover */
+        .activity-item {
+            transition: all 0.3s ease;
+        }
+        
+        .activity-item:hover {
+            transform: translateX(5px);
+            border-left-width: 6px;
+        }
+        
+        /* ========== RESPONSIVE ANIMATIONS ========== */
+        
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    {% if user.is_authenticated %}
+    <nav class="bg-white shadow-lg border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <!-- Logo -->
+                    <div class="flex-shrink-0">
+                        <a href="{% url 'inventory:dashboard' %}" class="flex items-center">
+                            <img src="{% static 'images/supermarket.png' %}" alt="Supermarket Logo" class="h-8 w-8 mr-2">
+                            <span class="text-lg sm:text-xl font-bold text-gray-900">{{ company_name|default:"Inventory POS" }}</span>
+                        </a>
+                    </div>
+                    
+                    <!-- Desktop Navigation Links -->
+                    <div class="hidden lg:ml-10 lg:flex lg:space-x-8">
+                        <a href="{% url 'inventory:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}text-blue-600 border-b-2 border-blue-600{% else %}text-gray-700 hover:text-blue-600{% endif %} px-3 py-2 text-sm font-medium">
+                            <i class="fas fa-tachometer-alt mr-1"></i>Dashboard
+                        </a>
+                        
+                        <a href="{% url 'pos:pos' %}" class="{% if request.resolver_match.app_name == 'pos' and request.resolver_match.url_name == 'pos' %}text-blue-600 border-b-2 border-blue-600{% else %}text-gray-700 hover:text-blue-600{% endif %} px-3 py-2 text-sm font-medium">
+                            <i class="fas fa-cash-register mr-1"></i>POS
+                        </a>
+                        
+                        <a href="{% url 'pos:sale_list' %}" class="{% if request.resolver_match.app_name == 'pos' and request.resolver_match.url_name == 'sale_list' %}text-blue-600 border-b-2 border-blue-600{% else %}text-gray-700 hover:text-blue-600{% endif %} px-3 py-2 text-sm font-medium">
+                            <i class="fas fa-receipt mr-1"></i>Transactions
+                        </a>
+                        
+                        <div class="relative group">
+                            <a href="{% url 'inventory:product_list' %}" class="{% if request.resolver_match.app_name == 'inventory' %}text-blue-600 border-b-2 border-blue-600{% else %}text-gray-700 hover:text-blue-600{% endif %} px-3 py-2 text-sm font-medium flex items-center">
+                                <i class="fas fa-boxes mr-1"></i>Inventory
+                                <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                            </a>
+                            <div class="absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                                <a href="{% url 'inventory:product_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-boxes mr-2"></i>Products
+                                </a>
+                                <a href="{% url 'inventory:category_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-tags mr-2"></i>Categories
+                                </a>
+                                <a href="{% url 'inventory:archived_products' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-archive mr-2"></i>Archived Products
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex items-center">
+                    <!-- Mobile menu button -->
+                    <div class="lg:hidden">
+                        <button id="mobile-menu-button" type="button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500" aria-controls="mobile-menu" aria-expanded="false">
+                            <span class="sr-only">Open main menu</span>
+                            <!-- Hamburger icon -->
+                            <svg id="hamburger-icon" class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                            <!-- Close icon -->
+                            <svg id="close-icon" class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Desktop User Menu -->
+                    <div class="hidden lg:flex lg:items-center lg:ml-6 lg:space-x-4">
+                        <!-- Dark Mode Toggle -->
+                        <button id="dark-mode-toggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200" title="Toggle Dark Mode">
+                            <i id="dark-mode-icon" class="fas fa-moon text-gray-600 dark:text-gray-300"></i>
+                        </button>
+                        
+                        <!-- User Dropdown -->
+                        <div class="relative group">
+                            <button class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <img class="h-8 w-8 rounded-full bg-gray-300" src="https://ui-avatars.com/api/?name={{ user.get_full_name|urlencode }}&background=3B82F6&color=fff" alt="{{ user.get_full_name }}">
+                                <span class="ml-2 text-gray-700 hidden xl:block">{{ user.get_full_name|default:user.username }}</span>
+                                <i class="fas fa-chevron-down ml-1 text-xs text-gray-500"></i>
+                            </button>
+                            <div class="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                                <a href="{% url 'inventory:profile_view' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-user mr-2"></i>My Profile
+                                </a>
+                                <hr class="my-1">
+                                <a href="{% url 'accounts:logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="lg:hidden hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-gray-200">
+                <a href="{% url 'inventory:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                </a>
+                
+                <a href="{% url 'pos:pos' %}" class="{% if request.resolver_match.app_name == 'pos' and request.resolver_match.url_name == 'pos' %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    <i class="fas fa-cash-register mr-2"></i>Point of Sale
+                </a>
+                
+                <a href="{% url 'pos:sale_list' %}" class="{% if request.resolver_match.app_name == 'pos' and request.resolver_match.url_name == 'sale_list' %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    <i class="fas fa-receipt mr-2"></i>Transactions
+                </a>
+                
+                <!-- Mobile Inventory Submenu -->
+                <div class="border-transparent text-gray-600">
+                    <button id="mobile-inventory-toggle" class="w-full flex items-center justify-between pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800">
+                        <span><i class="fas fa-boxes mr-2"></i>Inventory</span>
+                        <i id="mobile-inventory-arrow" class="fas fa-chevron-right text-xs transition-transform duration-200"></i>
+                    </button>
+                    <div id="mobile-inventory-submenu" class="hidden pl-6 pb-2 space-y-1">
+                        <a href="{% url 'inventory:product_list' %}" class="block pl-3 pr-4 py-2 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-50">
+                            <i class="fas fa-boxes mr-2"></i>Products
+                        </a>
+                        <a href="{% url 'inventory:category_list' %}" class="block pl-3 pr-4 py-2 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-50">
+                            <i class="fas fa-tags mr-2"></i>Categories
+                        </a>
+                        <a href="{% url 'inventory:archived_products' %}" class="block pl-3 pr-4 py-2 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-50">
+                            <i class="fas fa-archive mr-2"></i>Archived Products
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mobile User Menu -->
+            <div class="pt-4 pb-3 border-t border-gray-200">
+                <div class="flex items-center px-4">
+                    <div class="flex-shrink-0">
+                        <img class="h-10 w-10 rounded-full" src="https://ui-avatars.com/api/?name={{ user.get_full_name|urlencode }}&background=3B82F6&color=fff" alt="{{ user.get_full_name }}">
+                    </div>
+                    <div class="ml-3">
+                        <div class="text-base font-medium text-gray-800">{{ user.get_full_name|default:user.username }}</div>
+                        <div class="text-sm font-medium text-gray-500">{{ user.email }}</div>
+                    </div>
+                </div>
+                <div class="mt-3 space-y-1">
+                    <a href="{% url 'inventory:profile_view' %}" class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
+                        <i class="fas fa-user mr-2"></i>My Profile
+                    </a>
+                    <button id="mobile-dark-mode-toggle" class="w-full text-left px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
+                        <i id="mobile-dark-mode-icon" class="fas fa-moon mr-2"></i>Dark Mode
+                    </button>
+                    <a href="{% url 'accounts:logout' %}" class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Sign out
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="{% if user.is_authenticated %}py-6{% else %}py-12{% endif %}">
+        {% if messages %}
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} bg-{% if message.tags == 'error' %}red{% elif message.tags == 'warning' %}yellow{% elif message.tags == 'success' %}green{% else %}blue{% endif %}-100 border border-{% if message.tags == 'error' %}red{% elif message.tags == 'warning' %}yellow{% elif message.tags == 'success' %}green{% else %}blue{% endif %}-400 text-{% if message.tags == 'error' %}red{% elif message.tags == 'warning' %}yellow{% elif message.tags == 'success' %}green{% else %}blue{% endif %}-700 px-4 py-3 rounded mb-4">
+                {{ message }}
+                <button type="button" class="float-right text-xl leading-none font-semibold outline-none focus:outline-none" onclick="this.parentElement.style.display='none';">
+                    <span>&times;</span>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    {% if user.is_authenticated %}
+    <footer class="bg-white border-t border-gray-200 mt-12">
+        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+            <p class="text-center text-sm text-gray-500">
+                © 2025 {{ company_name|default:"Inventory POS" }}. All rights reserved. Created by: John Eric Bayer
+            </p>
+        </div>
+    </footer>
+    {% endif %}
+
+    <!-- JavaScript -->
+    <script>
+        // Mobile menu functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const hamburgerIcon = document.getElementById('hamburger-icon');
+            const closeIcon = document.getElementById('close-icon');
+            const inventoryToggle = document.getElementById('mobile-inventory-toggle');
+            const inventorySubmenu = document.getElementById('mobile-inventory-submenu');
+            const inventoryArrow = document.getElementById('mobile-inventory-arrow');
+
+            // Toggle mobile menu
+            if (mobileMenuButton) {
+                mobileMenuButton.addEventListener('click', function() {
+                    const isMenuOpen = !mobileMenu.classList.contains('hidden');
+                    
+                    if (isMenuOpen) {
+                        // Close menu
+                        mobileMenu.classList.add('hidden');
+                        hamburgerIcon.classList.remove('hidden');
+                        closeIcon.classList.add('hidden');
+                        mobileMenuButton.setAttribute('aria-expanded', 'false');
+                    } else {
+                        // Open menu
+                        mobileMenu.classList.remove('hidden');
+                        hamburgerIcon.classList.add('hidden');
+                        closeIcon.classList.remove('hidden');
+                        mobileMenuButton.setAttribute('aria-expanded', 'true');
+                    }
+                });
+            }
+
+            // Toggle inventory submenu in mobile
+            if (inventoryToggle) {
+                inventoryToggle.addEventListener('click', function() {
+                    const isSubmenuOpen = !inventorySubmenu.classList.contains('hidden');
+                    
+                    if (isSubmenuOpen) {
+                        // Close submenu
+                        inventorySubmenu.classList.add('hidden');
+                        inventoryArrow.classList.remove('rotate-90');
+                    } else {
+                        // Open submenu
+                        inventorySubmenu.classList.remove('hidden');
+                        inventoryArrow.classList.add('rotate-90');
+                    }
+                });
+            }
+
+            // Close mobile menu when clicking outside
+            document.addEventListener('click', function(event) {
+                if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+                    const isClickInsideMenu = mobileMenu.contains(event.target);
+                    const isClickOnButton = mobileMenuButton.contains(event.target);
+                    
+                    if (!isClickInsideMenu && !isClickOnButton) {
+                        mobileMenu.classList.add('hidden');
+                        hamburgerIcon.classList.remove('hidden');
+                        closeIcon.classList.add('hidden');
+                        mobileMenuButton.setAttribute('aria-expanded', 'false');
+                    }
+                }
+            });
+
+            // Close mobile menu on window resize to desktop size
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 1024) { // lg breakpoint
+                    if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+                        mobileMenu.classList.add('hidden');
+                        hamburgerIcon.classList.remove('hidden');
+                        closeIcon.classList.add('hidden');
+                        mobileMenuButton.setAttribute('aria-expanded', 'false');
+                    }
+                }
+            });
+        });
+
+        // Dark Mode Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const darkModeToggle = document.getElementById('dark-mode-toggle');
+            const mobileDarkModeToggle = document.getElementById('mobile-dark-mode-toggle');
+            const darkModeIcon = document.getElementById('dark-mode-icon');
+            const mobileDarkModeIcon = document.getElementById('mobile-dark-mode-icon');
+            const html = document.documentElement;
+            
+            // Get user's theme preference from profile or localStorage
+            let currentTheme = localStorage.getItem('theme') || 
+                              {% if user.is_authenticated and user.profile.theme_preference %}'{{ user.profile.theme_preference }}'{% else %}'light'{% endif %};
+            
+            // Apply initial theme
+            applyTheme(currentTheme);
+            
+            // Desktop dark mode toggle
+            if (darkModeToggle) {
+                darkModeToggle.addEventListener('click', function() {
+                    toggleTheme();
+                });
+            }
+            
+            // Mobile dark mode toggle
+            if (mobileDarkModeToggle) {
+                mobileDarkModeToggle.addEventListener('click', function() {
+                    toggleTheme();
+                });
+            }
+            
+            function toggleTheme() {
+                currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+                applyTheme(currentTheme);
+                saveThemePreference(currentTheme);
+            }
+            
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    html.classList.add('dark');
+                    html.classList.remove('light');
+                    if (darkModeIcon) {
+                        darkModeIcon.classList.remove('fa-moon');
+                        darkModeIcon.classList.add('fa-sun');
+                    }
+                    if (mobileDarkModeIcon) {
+                        mobileDarkModeIcon.classList.remove('fa-moon');
+                        mobileDarkModeIcon.classList.add('fa-sun');
+                    }
+                } else {
+                    html.classList.add('light');
+                    html.classList.remove('dark');
+                    if (darkModeIcon) {
+                        darkModeIcon.classList.remove('fa-sun');
+                        darkModeIcon.classList.add('fa-moon');
+                    }
+                    if (mobileDarkModeIcon) {
+                        mobileDarkModeIcon.classList.remove('fa-sun');
+                        mobileDarkModeIcon.classList.add('fa-moon');
+                    }
+                }
+                localStorage.setItem('theme', theme);
+            }
+            
+            function saveThemePreference(theme) {
+                // Save to user profile via AJAX if user is logged in
+                {% if user.is_authenticated %}
+                fetch('{% url "inventory:update_theme_preference" %}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '{{ csrf_token }}',
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'theme=' + theme
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('Theme preference saved successfully');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error saving theme preference:', error);
+                });
+                {% endif %}
+            }
+        });
+
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                alert.style.transition = 'opacity 0.5s';
+                alert.style.opacity = '0';
+                setTimeout(function() {
+                    alert.style.display = 'none';
+                }, 500);
+            });
+        }, 5000);
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

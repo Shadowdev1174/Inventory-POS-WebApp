@@ -1,0 +1,532 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load breadcrumbs %}
+
+{% block title %}Edit Profile - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-edit-section {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+    
+    .dark .profile-edit-section {
+        background: #1e293b;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        border: 1px solid #334155;
+    }
+    
+    .avatar-preview {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }
+    
+    .dark .avatar-preview {
+        border-color: #334155;
+    }
+    
+    .avatar-upload-area {
+        border: 2px dashed #d1d5db;
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .dark .avatar-upload-area {
+        border-color: #334155;
+        background-color: #0f172a;
+    }
+    
+    .avatar-upload-area:hover {
+        border-color: #3b82f6;
+        background-color: #f8fafc;
+    }
+    
+    .dark .avatar-upload-area:hover {
+        border-color: #60a5fa;
+        background-color: #1e293b;
+    }
+    
+    .avatar-upload-area.dragover {
+        border-color: #1d4ed8;
+        background-color: #eff6ff;
+    }
+    
+    .dark .avatar-upload-area.dragover {
+        border-color: #3b82f6;
+        background-color: #1e293b;
+    }
+    
+    .form-floating {
+        margin-bottom: 1rem;
+    }
+    
+    .section-title {
+        color: #374151;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #f3f4f6;
+    }
+    
+    .dark .section-title {
+        color: #ffffff;
+        border-bottom-color: #334155;
+        font-weight: 600;
+    }
+    
+    .btn-save {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .dark .btn-save {
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    }
+    
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+    
+    .dark .btn-save:hover {
+        box-shadow: 0 8px 15px rgba(59, 130, 246, 0.4);
+    }
+    
+    .preview-card {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .dark .preview-card {
+        background: #0f172a;
+        border-color: #334155;
+    }
+    
+    .error-text {
+        color: #dc2626;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+    
+    .dark .error-text {
+        color: #f87171;
+        font-weight: 500;
+    }
+    
+    /* Form controls dark mode */
+    .dark .form-floating > label {
+        color: #94a3b8;
+        font-weight: 500;
+    }
+    
+    .dark .form-floating > .form-control:focus ~ label,
+    .dark .form-floating > .form-control:not(:placeholder-shown) ~ label {
+        color: #60a5fa;
+        font-weight: 600;
+    }
+    
+    .dark .form-control {
+        background-color: #0f172a;
+        border-color: #334155;
+        color: #ffffff;
+    }
+    
+    .dark .form-control:focus {
+        background-color: #0f172a;
+        border-color: #60a5fa;
+        color: #ffffff;
+        box-shadow: 0 0 0 0.2rem rgba(96, 165, 250, 0.25);
+    }
+    
+    .dark textarea.form-control {
+        background-color: #0f172a;
+        color: #ffffff;
+    }
+    
+    /* Upload area text */
+    .dark .avatar-upload-area h5 {
+        color: #94a3b8;
+        font-weight: 600;
+    }
+    
+    .dark .avatar-upload-area p {
+        color: #64748b;
+        font-weight: 500;
+    }
+    
+    .dark .avatar-upload-area i {
+        color: #64748b;
+    }
+    
+    /* Alert improvements */
+    .dark .alert-success {
+        background-color: #064e3b;
+        color: #34d399;
+        border-color: #059669;
+        font-weight: 500;
+    }
+    
+    .dark .alert-danger {
+        background-color: #7f1d1d;
+        color: #f87171;
+        border-color: #dc2626;
+        font-weight: 500;
+    }
+    
+    @media (max-width: 768px) {
+        .profile-edit-section {
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .avatar-preview {
+            width: 80px;
+            height: 80px;
+        }
+        
+        .avatar-upload-area {
+            padding: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+    {% breadcrumbs %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Form Header -->
+            <div class="profile-edit-section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="mb-0">
+                        <i class="fas fa-user-edit me-2"></i>Edit Profile
+                    </h3>
+                    <a href="{% url 'inventory:profile_view' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Profile
+                    </a>
+                </div>
+                
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <form method="post" enctype="multipart/form-data" id="profileForm">
+                {% csrf_token %}
+                
+                <!-- Profile Picture Section -->
+                <div class="profile-edit-section">
+                    <h4 class="section-title">
+                        <i class="fas fa-camera me-2"></i>Profile Picture
+                    </h4>
+                    
+                    <div class="row align-items-center">
+                        <div class="col-md-3 text-center mb-3 mb-md-0">
+                            <img src="{% if profile.profile_picture %}{{ profile.profile_picture.url }}{% else %}{% static 'images/default-avatar.svg' %}{% endif %}" 
+                                 alt="Current Avatar" 
+                                 class="avatar-preview" 
+                                 id="avatarPreview">
+                        </div>
+                        <div class="col-md-9">
+                            <div class="avatar-upload-area" onclick="document.getElementById('{{ profile_form.avatar.id_for_label }}').click()">
+                                <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Click to upload a new profile picture</h5>
+                                <p class="text-muted mb-0">
+                                    Recommended: 200x200px, Max size: 2MB
+                                    <br>Supported formats: JPG, PNG, GIF
+                                </p>
+                                {{ profile_form.profile_picture }}
+                            </div>
+                            {% if profile_form.profile_picture.errors %}
+                                <div class="error-text">{{ profile_form.profile_picture.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Personal Information -->
+                <div class="profile-edit-section">
+                    <h4 class="section-title">
+                        <i class="fas fa-user me-2"></i>Personal Information
+                    </h4>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                {{ user_form.first_name }}
+                                <label for="{{ user_form.first_name.id_for_label }}">First Name</label>
+                                {% if user_form.first_name.errors %}
+                                    <div class="error-text">{{ user_form.first_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                {{ user_form.last_name }}
+                                <label for="{{ user_form.last_name.id_for_label }}">Last Name</label>
+                                {% if user_form.last_name.errors %}
+                                    <div class="error-text">{{ user_form.last_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                {{ user_form.email }}
+                                <label for="{{ user_form.email.id_for_label }}">Email Address</label>
+                                {% if user_form.email.errors %}
+                                    <div class="error-text">{{ user_form.email.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                {{ profile_form.phone }}
+                                <label for="{{ profile_form.phone.id_for_label }}">Phone Number</label>
+                                {% if profile_form.phone.errors %}
+                                    <div class="error-text">{{ profile_form.phone.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                {{ profile_form.date_of_birth }}
+                                <label for="{{ profile_form.date_of_birth.id_for_label }}">Date of Birth</label>
+                                {% if profile_form.date_of_birth.errors %}
+                                    <div class="error-text">{{ profile_form.date_of_birth.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-floating">
+                                {{ profile_form.bio }}
+                                <label for="{{ profile_form.bio.id_for_label }}">Bio</label>
+                                {% if profile_form.bio.errors %}
+                                    <div class="error-text">{{ profile_form.bio.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-floating">
+                                {{ profile_form.address }}
+                                <label for="{{ profile_form.address.id_for_label }}">Address</label>
+                                {% if profile_form.address.errors %}
+                                    <div class="error-text">{{ profile_form.address.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Work Information -->
+                <div class="profile-edit-section">
+                    <h4 class="section-title">
+                        <i class="fas fa-briefcase me-2"></i>Work Information
+                    </h4>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                {{ profile_form.job_title }}
+                                <label for="{{ profile_form.job_title.id_for_label }}">Job Title</label>
+                                {% if profile_form.job_title.errors %}
+                                    <div class="error-text">{{ profile_form.job_title.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                {{ profile_form.department }}
+                                <label for="{{ profile_form.department.id_for_label }}">Department</label>
+                                {% if profile_form.department.errors %}
+                                    <div class="error-text">{{ profile_form.department.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                {{ profile_form.hire_date }}
+                                <label for="{{ profile_form.hire_date.id_for_label }}">Hire Date</label>
+                                {% if profile_form.hire_date.errors %}
+                                    <div class="error-text">{{ profile_form.hire_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- App Preferences -->
+                <div class="profile-edit-section">
+                    <h4 class="section-title">
+                        <i class="fas fa-cog me-2"></i>App Preferences
+                    </h4>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                {{ profile_form.theme_preference }}
+                                <label for="{{ profile_form.theme_preference.id_for_label }}">Theme Preference</label>
+                                {% if profile_form.theme_preference.errors %}
+                                    <div class="error-text">{{ profile_form.theme_preference.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="preview-card">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Theme changes will be applied immediately after saving.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="profile-edit-section">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{% url 'inventory:profile_view' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-save">
+                            <i class="fas fa-save me-2"></i>Save Changes
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Avatar preview functionality
+    const avatarInput = document.getElementById('{{ profile_form.profile_picture.id_for_label }}');
+    const avatarPreview = document.getElementById('avatarPreview');
+    const uploadArea = document.querySelector('.avatar-upload-area');
+    
+    if (avatarInput) {
+        avatarInput.style.display = 'none';
+        
+        avatarInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Validate file type
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                if (!validTypes.includes(file.type)) {
+                    alert('Please select a valid image file (JPG, PNG, or GIF)');
+                    this.value = '';
+                    return;
+                }
+                
+                // Validate file size (2MB)
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('File size must be less than 2MB');
+                    this.value = '';
+                    return;
+                }
+                
+                // Preview the image
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    avatarPreview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+    
+    // Drag and drop functionality for avatar upload
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            avatarInput.files = files;
+            avatarInput.dispatchEvent(new Event('change'));
+        }
+    });
+    
+    // Form validation
+    const form = document.getElementById('profileForm');
+    form.addEventListener('submit', function(e) {
+        // Basic client-side validation
+        const email = document.getElementById('{{ user_form.email.id_for_label }}');
+        if (email.value && !isValidEmail(email.value)) {
+            e.preventDefault();
+            alert('Please enter a valid email address');
+            email.focus();
+            return;
+        }
+        
+        // Show loading state
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+        submitBtn.disabled = true;
+        
+        // Reset button after 5 seconds (in case form submission fails)
+        setTimeout(() => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }, 5000);
+    });
+    
+    function isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+    
+    // Real-time form feedback
+    const inputs = form.querySelectorAll('input, textarea, select');
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.value.trim()) {
+                this.classList.add('is-valid');
+                this.classList.remove('is-invalid');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

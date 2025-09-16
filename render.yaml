@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: inventory-pos-app
+    env: python
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate
+    startCommand: gunicorn inventory_pos.wsgi:application
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
+      - key: ALLOWED_HOSTS
+        fromService:
+          type: web
+          name: inventory-pos-app
+          property: host
+
+databases:
+  - name: inventory-pos-db
+    databaseName: inventory_pos
+    user: postgres

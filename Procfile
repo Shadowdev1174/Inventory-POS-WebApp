@@ -1,0 +1,1 @@
+web: gunicorn INVENTORY_POS_APP.wsgi

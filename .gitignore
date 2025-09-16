@@ -1,0 +1,51 @@
+# Ignore Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django stuff
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Environment variables
+.env
+
+# Static files (generated)
+/staticfiles/
+/static_root/
+
+# Media files in production (use cloud storage)
+/media/
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+test_*.py
+*_test.py
+*.coverage
+
+# Logs
+logs/
+*.log
+
+# Node modules (if using npm)
+node_modules/
+
+# Build artifacts
+build/
+dist/

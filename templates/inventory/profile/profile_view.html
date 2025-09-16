@@ -1,0 +1,399 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load breadcrumbs %}
+
+{% block title %}My Profile - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }
+    
+    .dark .profile-avatar {
+        border-color: #334155;
+    }
+    
+    .profile-avatar:hover {
+        border-color: #3b82f6;
+        transform: scale(1.05);
+    }
+    
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: transform 0.3s ease;
+    }
+    
+    .dark .stat-card {
+        background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%);
+        color: white;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .activity-item {
+        padding: 1rem;
+        border-left: 4px solid #3b82f6;
+        background: #f8fafc;
+        margin-bottom: 0.5rem;
+        border-radius: 0 8px 8px 0;
+        transition: all 0.3s ease;
+    }
+    
+    .dark .activity-item {
+        background: #1e293b;
+        border-left-color: #60a5fa;
+    }
+    
+    .activity-item:hover {
+        background: #f1f5f9;
+        border-left-color: #1d4ed8;
+    }
+    
+    .dark .activity-item:hover {
+        background: #334155;
+        border-left-color: #3b82f6;
+    }
+    
+    .profile-section {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+    
+    .dark .profile-section {
+        background: #1e293b;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        border: 1px solid #334155;
+    }
+    
+    .badge-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .badge-active {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+    
+    .dark .badge-active {
+        background-color: #064e3b;
+        color: #34d399;
+    }
+    
+    .badge-inactive {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+    
+    .dark .badge-inactive {
+        background-color: #7f1d1d;
+        color: #f87171;
+    }
+    
+    /* Enhanced text visibility in dark mode */
+    .dark .text-muted {
+        color: #94a3b8 !important;
+        font-weight: 500;
+    }
+    
+    .dark .fw-bold {
+        color: #ffffff !important;
+        font-weight: 600;
+    }
+    
+    .dark h2,
+    .dark h3,
+    .dark h4,
+    .dark h5,
+    .dark h6 {
+        color: #ffffff !important;
+        font-weight: 600;
+    }
+    
+    .dark .form-label {
+        color: #94a3b8 !important;
+        font-weight: 500;
+    }
+    
+    /* Button improvements */
+    .dark .btn-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        border: none;
+        color: white;
+        font-weight: 500;
+    }
+    
+    .dark .btn-outline-primary {
+        color: #60a5fa;
+        border-color: #60a5fa;
+        background: transparent;
+    }
+    
+    .dark .btn-outline-primary:hover {
+        background-color: #60a5fa;
+        color: white;
+    }
+    
+    .dark .btn-outline-secondary {
+        color: #94a3b8;
+        border-color: #334155;
+    }
+    
+    .dark .btn-outline-secondary:hover {
+        background-color: #334155;
+        color: white;
+        border-color: #334155;
+    }
+    
+    .dark .btn-outline-info {
+        color: #38bdf8;
+        border-color: #38bdf8;
+    }
+    
+    .dark .btn-outline-info:hover {
+        background-color: #38bdf8;
+        color: white;
+    }
+    
+    @media (max-width: 768px) {
+        .profile-section {
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+    {% breadcrumbs %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Profile Header -->
+    <div class="profile-section scale-in">
+        <div class="row align-items-center">
+            <div class="col-md-2 text-center mb-3 mb-md-0">
+                <img src="{% if profile.profile_picture %}{{ profile.profile_picture.url }}{% else %}{% static 'images/default-avatar.svg' %}{% endif %}" 
+                     alt="{{ user.get_full_name|default:user.username }}" 
+                     class="profile-avatar float">
+            </div>
+            <div class="col-md-7">
+                <h2 class="mb-2 gradient-text">{{ profile.display_name }}</h2>
+                <p class="text-muted mb-2">
+                    <i class="fas fa-user me-2"></i>{{ user.username }}
+                </p>
+                {% if profile.job_title %}
+                <p class="text-muted mb-2">
+                    <i class="fas fa-briefcase me-2"></i>{{ profile.job_title }}
+                    {% if profile.department %} - {{ profile.department }}{% endif %}
+                </p>
+                {% endif %}
+                {% if profile.bio %}
+                <p class="mb-2">{{ profile.bio }}</p>
+                {% endif %}
+                <span class="badge-status badge-active">
+                    <i class="fas fa-circle me-1"></i>Active Employee
+                </span>
+            </div>
+            <div class="col-md-3 text-end">
+                <a href="{% url 'inventory:profile_edit' %}" class="btn btn-primary pulse">
+                    <i class="fas fa-edit me-2"></i>Edit Profile
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column - Personal Information -->
+        <div class="col-lg-8">
+            <!-- Personal Details -->
+            <div class="profile-section">
+                <h4 class="mb-4">
+                    <i class="fas fa-info-circle me-2"></i>Personal Information
+                </h4>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted">Full Name</label>
+                        <p class="fw-bold">{{ user.get_full_name|default:"Not provided" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted">Email</label>
+                        <p class="fw-bold">{{ user.email|default:"Not provided" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted">Phone Number</label>
+                        <p class="fw-bold">{{ profile.phone|default:"Not provided" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted">Date of Birth</label>
+                        <p class="fw-bold">{{ profile.date_of_birth|default:"Not provided" }}</p>
+                    </div>
+                    {% if profile.address %}
+                    <div class="col-12 mb-3">
+                        <label class="form-label text-muted">Address</label>
+                        <p class="fw-bold">{{ profile.address }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Work Information -->
+            <div class="profile-section">
+                <h4 class="mb-4">
+                    <i class="fas fa-building me-2"></i>Work Information
+                </h4>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted">Job Title</label>
+                        <p class="fw-bold">{{ profile.job_title|default:"Not specified" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted">Department</label>
+                        <p class="fw-bold">{{ profile.department|default:"Not specified" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted">Hire Date</label>
+                        <p class="fw-bold">{{ profile.hire_date|default:"Not specified" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted">Account Created</label>
+                        <p class="fw-bold">{{ user.date_joined|date:"F d, Y" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activities -->
+            <div class="profile-section">
+                <h4 class="mb-4">
+                    <i class="fas fa-history me-2"></i>Recent Activities
+                </h4>
+                {% if recent_activities %}
+                    {% for activity in recent_activities %}
+                    <div class="activity-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ activity.get_movement_type_display }}</h6>
+                                <p class="mb-1 text-muted">
+                                    <strong>{{ activity.product.name }}</strong> - {{ activity.quantity }} units
+                                    {% if activity.reason %}- {{ activity.reason }}{% endif %}
+                                </p>
+                                <small class="text-muted">{{ activity.created_at|timesince }} ago</small>
+                            </div>
+                            <span class="badge bg-primary">{{ activity.movement_type }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-4">
+                        <i class="fas fa-inbox fa-2x mb-3 d-block"></i>
+                        No recent activities found
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Column - Statistics -->
+        <div class="col-lg-4">
+            <!-- Quick Stats -->
+            <div class="profile-section">
+                <h4 class="mb-4">
+                    <i class="fas fa-chart-bar me-2"></i>Quick Stats
+                </h4>
+                <div class="stat-card mb-3">
+                    <h3 class="mb-2">{{ total_products_created }}</h3>
+                    <p class="mb-0">Products Managed</p>
+                </div>
+                <div class="stat-card mb-3" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <h3 class="mb-2">{{ recent_activities|length }}</h3>
+                    <p class="mb-0">Recent Activities</p>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <h3 class="mb-2">{{ user.date_joined|timesince }}</h3>
+                    <p class="mb-0">Time with Company</p>
+                </div>
+            </div>
+
+            <!-- App Preferences -->
+            <div class="profile-section">
+                <h4 class="mb-4">
+                    <i class="fas fa-cog me-2"></i>Preferences
+                </h4>
+                <div class="mb-3">
+                    <label class="form-label text-muted">Theme Preference</label>
+                    <p class="fw-bold">
+                        <i class="fas fa-{% if profile.theme_preference == 'dark' %}moon{% else %}sun{% endif %} me-2"></i>
+                        {{ profile.get_theme_preference_display }}
+                    </p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted">Last Profile Update</label>
+                    <p class="fw-bold">{{ profile.updated_at|date:"F d, Y" }}</p>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="profile-section">
+                <h4 class="mb-4">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h4>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'inventory:profile_edit' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-2"></i>Edit Profile
+                    </a>
+                    <a href="{% url 'inventory:dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                    <a href="{% url 'inventory:product_list' %}" class="btn btn-outline-info">
+                        <i class="fas fa-boxes me-2"></i>Manage Products
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add some interactivity
+    const statCards = document.querySelectorAll('.stat-card');
+    statCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-8px) scale(1.02)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(-5px) scale(1)';
+        });
+    });
+});
+</script>
+{% endblock %}
