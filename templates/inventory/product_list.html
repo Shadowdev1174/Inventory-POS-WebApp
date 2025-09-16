@@ -1,0 +1,563 @@
+{% extends 'base/base.html' %}
+{% load breadcrumbs %}
+
+{% block title %}Products - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Breadcrumbs -->
+    {% breadcrumbs %}
+    
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Products</h1>
+            <p class="text-gray-600 mt-1">{{ products|length }} of {{ total_products }} products</p>
+        </div>
+        <div class="flex space-x-3">
+            <button id="exportBtn" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-200">
+                <i class="fas fa-download mr-2"></i>Export
+            </button>
+            <a href="{% url 'inventory:archived_products' %}" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition duration-200">
+                <i class="fas fa-archive mr-2"></i>View Archived
+            </a>
+            <a href="{% url 'inventory:product_create' %}" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200">
+                <i class="fas fa-plus mr-2"></i>Add Product
+            </a>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="bg-white shadow rounded-lg p-4 sm:p-6 mb-6">
+        <form method="get" class="space-y-4">
+            <!-- Mobile: Collapsible filters -->
+            <div class="block sm:hidden">
+                <button type="button" id="mobile-filter-toggle" class="w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-md bg-gray-50">
+                    <span class="text-sm font-medium text-gray-700">
+                        <i class="fas fa-filter mr-2"></i>Filters & Search
+                    </span>
+                    <i id="mobile-filter-arrow" class="fas fa-chevron-down text-sm text-gray-500 transition-transform duration-200"></i>
+                </button>
+            </div>
+            
+            <!-- Filter Content -->
+            <div id="filter-content" class="hidden sm:block space-y-4">
+                <!-- Search Row -->
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1 sm:hidden">Search</label>
+                        <input type="text" name="search" value="{{ request.GET.search }}" 
+                               placeholder="Search products, SKU, or barcode..." 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                    </div>
+                </div>
+                
+                <!-- Filter Row -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                        <select name="category" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                            <option value="">All Categories</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>
+                                {{ category.name }} ({{ category.product_count }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Stock Status</label>
+                        <select name="stock" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                            <option value="">All Stock</option>
+                            <option value="low" {% if request.GET.stock == 'low' %}selected{% endif %}>Low Stock</option>
+                            <option value="out" {% if request.GET.stock == 'out' %}selected{% endif %}>Out of Stock</option>
+                            <option value="good" {% if request.GET.stock == 'good' %}selected{% endif %}>Well Stocked</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Price Range</label>
+                        <select name="price_range" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                            <option value="">All Prices</option>
+                            <option value="0-10" {% if request.GET.price_range == '0-10' %}selected{% endif %}>₱0 - ₱10</option>
+                            <option value="10-50" {% if request.GET.price_range == '10-50' %}selected{% endif %}>₱10 - ₱50</option>
+                            <option value="50-100" {% if request.GET.price_range == '50-100' %}selected{% endif %}>₱50 - ₱100</option>
+                            <option value="100+" {% if request.GET.price_range == '100+' %}selected{% endif %}>₱100+</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+                        <select name="sort" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                            <option value="name" {% if request.GET.sort == 'name' %}selected{% endif %}>Name (A-Z)</option>
+                            <option value="-name" {% if request.GET.sort == '-name' %}selected{% endif %}>Name (Z-A)</option>
+                            <option value="selling_price" {% if request.GET.sort == 'selling_price' %}selected{% endif %}>Price (Low-High)</option>
+                            <option value="-selling_price" {% if request.GET.sort == '-selling_price' %}selected{% endif %}>Price (High-Low)</option>
+                            <option value="stock_quantity" {% if request.GET.sort == 'stock_quantity' %}selected{% endif %}>Stock (Low-High)</option>
+                            <option value="-stock_quantity" {% if request.GET.sort == '-stock_quantity' %}selected{% endif %}>Stock (High-Low)</option>
+                            <option value="-created_at" {% if request.GET.sort == '-created_at' %}selected{% endif %}>Newest First</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <button type="submit" class="flex-1 sm:flex-none bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200 text-sm">
+                        <i class="fas fa-search mr-2"></i>Apply Filters
+                    </button>
+                    <a href="{% url 'inventory:product_list' %}" class="flex-1 sm:flex-none bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition duration-200 text-center text-sm">
+                        <i class="fas fa-times mr-2"></i>Clear All
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bulk Actions Bar (Hidden by default) -->
+    <div id="bulkActionsBar" class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 hidden">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <span id="selectedCount" class="text-blue-700 font-medium mr-4">0 items selected</span>
+                <div class="flex space-x-2">
+                    <button id="bulkArchiveBtn" class="bg-yellow-600 text-white px-3 py-1 rounded text-sm hover:bg-yellow-700">
+                        <i class="fas fa-archive mr-1"></i>Archive Selected
+                    </button>
+                    <button id="bulkDeleteBtn" class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700">
+                        <i class="fas fa-trash mr-1"></i>Delete Selected
+                    </button>
+                    <button id="bulkExportBtn" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">
+                        <i class="fas fa-download mr-1"></i>Export Selected
+                    </button>
+                </div>
+            </div>
+            <button id="clearSelection" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    {% if products %}
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="p-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <label class="flex items-center">
+                    <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                    <span class="ml-2 text-sm text-gray-700">Select All</span>
+                </label>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-500">View:</span>
+                    <button id="gridView" class="p-2 text-blue-600 hover:bg-blue-50 rounded">
+                        <i class="fas fa-th-large"></i>
+                    </button>
+                    <button id="listView" class="p-2 text-gray-400 hover:bg-gray-50 rounded">
+                        <i class="fas fa-list"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Grid View -->
+        <div id="gridContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 p-4 sm:p-6">
+            {% for product in products %}
+            <div class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition duration-200 relative">
+                <!-- Selection Checkbox -->
+                <div class="absolute top-2 left-2 z-10">
+                    <input type="checkbox" class="product-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                           value="{{ product.id }}" data-name="{{ product.name }}">
+                </div>
+                
+                {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-32 sm:h-48 object-cover">
+                {% else %}
+                <div class="w-full h-32 sm:h-48 bg-gray-200 flex items-center justify-center">
+                    <i class="fas fa-image text-gray-400 text-2xl sm:text-4xl"></i>
+                </div>
+                {% endif %}
+                
+                <div class="p-3 sm:p-4">
+                    <h3 class="font-semibold text-sm sm:text-lg text-gray-900 mb-1 sm:mb-2 line-clamp-2">{{ product.name }}</h3>
+                    <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">
+                        <i class="fas fa-tag mr-1"></i>{{ product.category.name|default:"No Category" }}
+                    </p>
+                    <p class="text-xs sm:text-sm text-gray-500 mb-2 sm:mb-2">
+                        <i class="fas fa-barcode mr-1"></i>{{ product.sku }}
+                    </p>
+                    
+                    <div class="flex justify-between items-center mb-2 sm:mb-3">
+                        <span class="text-sm sm:text-lg font-bold text-green-600">₱{{ product.selling_price }}</span>
+                        <span class="text-xs sm:text-sm {% if product.is_low_stock %}text-red-600{% else %}text-gray-600{% endif %}">
+                            <i class="fas fa-boxes mr-1"></i>{{ product.stock_quantity }}
+                        </span>
+                    </div>
+                    
+                    {% if product.stock_quantity == 0 %}
+                    <div class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded mb-2 sm:mb-3 text-center">
+                        <i class="fas fa-exclamation-circle mr-1"></i>Out of Stock
+                    </div>
+                    {% elif product.is_low_stock %}
+                    <div class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded mb-2 sm:mb-3 text-center">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>Low Stock
+                    </div>
+                    {% endif %}
+                    
+                    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                        <a href="{% url 'inventory:product_edit' product.pk %}" 
+                           class="flex-1 bg-blue-600 text-white text-center py-2 px-3 text-xs sm:text-sm rounded hover:bg-blue-700 transition duration-200">
+                            <i class="fas fa-edit mr-1"></i>Edit
+                        </a>
+                        <a href="{% url 'inventory:product_delete' product.pk %}" 
+                           class="flex-1 bg-red-600 text-white text-center py-2 px-3 text-xs sm:text-sm rounded hover:bg-red-700 transition duration-200"
+                           onclick="return confirm('Archive this product?')">
+                            <i class="fas fa-archive mr-1"></i>Archive
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- List View (Hidden by default) -->
+        <div id="listContainer" class="hidden">
+            <table class="w-full">
+                <thead class="bg-gray-50 border-b">
+                    <tr>
+                        <th class="text-left py-3 px-4 font-semibold text-gray-900">
+                            <input type="checkbox" id="selectAllList" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        </th>
+                        <th class="text-left py-3 px-4 font-semibold text-gray-900">Product</th>
+                        <th class="text-left py-3 px-4 font-semibold text-gray-900">Category</th>
+                        <th class="text-left py-3 px-4 font-semibold text-gray-900">SKU</th>
+                        <th class="text-left py-3 px-4 font-semibold text-gray-900">Price</th>
+                        <th class="text-left py-3 px-4 font-semibold text-gray-900">Stock</th>
+                        <th class="text-left py-3 px-4 font-semibold text-gray-900">Status</th>
+                        <th class="text-center py-3 px-4 font-semibold text-gray-900">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for product in products %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="py-3 px-4">
+                            <input type="checkbox" class="product-checkbox-list rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                                   value="{{ product.id }}" data-name="{{ product.name }}">
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="flex items-center">
+                                {% if product.image %}
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-10 h-10 object-cover rounded mr-3">
+                                {% else %}
+                                <div class="w-10 h-10 bg-gray-200 rounded mr-3 flex items-center justify-center">
+                                    <i class="fas fa-image text-gray-400"></i>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <div class="font-medium text-gray-900">{{ product.name }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-sm">
+                                {{ product.category.name|default:"No Category" }}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4 text-sm text-gray-600">{{ product.sku }}</td>
+                        <td class="py-3 px-4 text-sm font-medium text-green-600">₱{{ product.selling_price }}</td>
+                        <td class="py-3 px-4 text-sm text-gray-600">{{ product.stock_quantity }}</td>
+                        <td class="py-3 px-4">
+                            {% if product.stock_quantity == 0 %}
+                            <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">Out of Stock</span>
+                            {% elif product.is_low_stock %}
+                            <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Low Stock</span>
+                            {% else %}
+                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">In Stock</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4 text-center">
+                            <div class="flex justify-center space-x-2">
+                                <a href="{% url 'inventory:product_edit' product.pk %}" 
+                                   class="text-blue-600 hover:text-blue-800" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'inventory:product_delete' product.pk %}" 
+                                   class="text-red-600 hover:text-red-800" title="Archive"
+                                   onclick="return confirm('Archive this product?')">
+                                    <i class="fas fa-archive"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="mt-8 flex justify-center">
+        <nav class="flex space-x-2">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.stock %}&stock={{ request.GET.stock }}{% endif %}" 
+               class="px-3 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded">
+                Previous
+            </a>
+            {% endif %}
+            
+            <span class="px-3 py-2 bg-blue-600 text-white rounded">
+                {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+            
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.stock %}&stock={{ request.GET.stock }}{% endif %}" 
+               class="px-3 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded">
+                Next
+            </a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+    
+    {% else %}
+    <div class="text-center py-12">
+        <i class="fas fa-box-open text-gray-400 text-6xl mb-4"></i>
+        <h3 class="text-xl font-medium text-gray-900 mb-2">No products found</h3>
+        <p class="text-gray-600 mb-4">
+            {% if request.GET.search or request.GET.category or request.GET.stock %}
+                Try adjusting your search filters or <a href="{% url 'inventory:product_list' %}" class="text-blue-600 hover:underline">clear all filters</a>.
+            {% else %}
+                Get started by adding your first product.
+            {% endif %}
+        </p>
+        <a href="{% url 'inventory:product_create' %}" class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition duration-200">
+            <i class="fas fa-plus mr-2"></i>Add Product
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Export Modal -->
+<div id="exportModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center">
+        <div class="bg-white rounded-lg shadow-xl transform transition-all sm:max-w-lg sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Export Products</h3>
+                <form id="exportForm" method="post" action="{% url 'inventory:export_products' %}">
+                    {% csrf_token %}
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Export Format</label>
+                            <select name="format" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                                <option value="csv">CSV (Excel Compatible)</option>
+                                <option value="pdf">PDF Report</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Include</label>
+                            <div class="space-y-2">
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="include_images" value="1" class="rounded border-gray-300">
+                                    <span class="ml-2 text-sm">Product Images (PDF only)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="include_stock_value" value="1" checked class="rounded border-gray-300">
+                                    <span class="ml-2 text-sm">Stock Value Calculations</span>
+                                </label>
+                            </div>
+                        </div>
+                        <input type="hidden" name="selected_products" id="selectedProductsInput">
+                    </div>
+                </form>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="submit" form="exportForm" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 sm:ml-3 sm:w-auto sm:text-sm">
+                    <i class="fas fa-download mr-2"></i>Export
+                </button>
+                <button type="button" id="closeExportModal" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mobile filter toggle
+    const mobileFilterToggle = document.getElementById('mobile-filter-toggle');
+    const filterContent = document.getElementById('filter-content');
+    const mobileFilterArrow = document.getElementById('mobile-filter-arrow');
+    
+    if (mobileFilterToggle) {
+        mobileFilterToggle.addEventListener('click', function() {
+            const isContentVisible = !filterContent.classList.contains('hidden');
+            
+            if (isContentVisible) {
+                filterContent.classList.add('hidden');
+                mobileFilterArrow.classList.remove('rotate-180');
+            } else {
+                filterContent.classList.remove('hidden');
+                mobileFilterArrow.classList.add('rotate-180');
+            }
+        });
+    }
+
+    // Bulk selection functionality
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const selectAllListCheckbox = document.getElementById('selectAllList');
+    const productCheckboxes = document.querySelectorAll('.product-checkbox');
+    const productCheckboxesList = document.querySelectorAll('.product-checkbox-list');
+    const bulkActionsBar = document.getElementById('bulkActionsBar');
+    const selectedCountSpan = document.getElementById('selectedCount');
+    
+    // View toggle functionality
+    const gridViewBtn = document.getElementById('gridView');
+    const listViewBtn = document.getElementById('listView');
+    const gridContainer = document.getElementById('gridContainer');
+    const listContainer = document.getElementById('listContainer');
+    
+    // Export functionality
+    const exportBtn = document.getElementById('exportBtn');
+    const exportModal = document.getElementById('exportModal');
+    const closeExportModal = document.getElementById('closeExportModal');
+    const selectedProductsInput = document.getElementById('selectedProductsInput');
+    
+    // View toggle
+    if (gridViewBtn) {
+        gridViewBtn.addEventListener('click', function() {
+            gridContainer.classList.remove('hidden');
+            listContainer.classList.add('hidden');
+            gridViewBtn.classList.add('text-blue-600');
+            gridViewBtn.classList.remove('text-gray-400');
+            listViewBtn.classList.add('text-gray-400');
+            listViewBtn.classList.remove('text-blue-600');
+        });
+    }
+    
+    if (listViewBtn) {
+        listViewBtn.addEventListener('click', function() {
+            gridContainer.classList.add('hidden');
+            listContainer.classList.remove('hidden');
+            listViewBtn.classList.add('text-blue-600');
+            listViewBtn.classList.remove('text-gray-400');
+            gridViewBtn.classList.add('text-gray-400');
+            gridViewBtn.classList.remove('text-blue-600');
+        });
+    }
+    
+    // Select all functionality
+    function updateBulkActionsBar() {
+        const checkedBoxes = document.querySelectorAll('.product-checkbox:checked, .product-checkbox-list:checked');
+        const count = checkedBoxes.length;
+        
+        if (count > 0 && bulkActionsBar) {
+            bulkActionsBar.classList.remove('hidden');
+            if (selectedCountSpan) {
+                selectedCountSpan.textContent = `${count} item${count !== 1 ? 's' : ''} selected`;
+            }
+        } else if (bulkActionsBar) {
+            bulkActionsBar.classList.add('hidden');
+        }
+    }
+    
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            productCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            updateBulkActionsBar();
+        });
+    }
+    
+    if (selectAllListCheckbox) {
+        selectAllListCheckbox.addEventListener('change', function() {
+            productCheckboxesList.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            updateBulkActionsBar();
+        });
+    }
+    
+    [...productCheckboxes, ...productCheckboxesList].forEach(checkbox => {
+        checkbox.addEventListener('change', updateBulkActionsBar);
+    });
+    
+    // Clear selection
+    const clearSelectionBtn = document.getElementById('clearSelection');
+    if (clearSelectionBtn) {
+        clearSelectionBtn.addEventListener('click', function() {
+            [...productCheckboxes, ...productCheckboxesList].forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            if (selectAllCheckbox) selectAllCheckbox.checked = false;
+            if (selectAllListCheckbox) selectAllListCheckbox.checked = false;
+            updateBulkActionsBar();
+        });
+    }
+    
+    // Export functionality
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function() {
+            const checkedBoxes = document.querySelectorAll('.product-checkbox:checked, .product-checkbox-list:checked');
+            const selectedIds = Array.from(checkedBoxes).map(cb => cb.value);
+            if (selectedProductsInput) {
+                selectedProductsInput.value = selectedIds.join(',');
+            }
+            if (exportModal) {
+                exportModal.classList.remove('hidden');
+            }
+        });
+    }
+    
+    if (closeExportModal) {
+        closeExportModal.addEventListener('click', function() {
+            if (exportModal) {
+                exportModal.classList.add('hidden');
+            }
+        });
+    }
+    
+    // Bulk actions
+    const bulkArchiveBtn = document.getElementById('bulkArchiveBtn');
+    if (bulkArchiveBtn) {
+        bulkArchiveBtn.addEventListener('click', function() {
+            const checkedBoxes = document.querySelectorAll('.product-checkbox:checked, .product-checkbox-list:checked');
+            const selectedIds = Array.from(checkedBoxes).map(cb => cb.value);
+            const selectedNames = Array.from(checkedBoxes).map(cb => cb.dataset.name);
+            
+            if (confirm(`Archive ${selectedIds.length} selected product(s)?\\n\\n${selectedNames.slice(0, 3).join(', ')}${selectedNames.length > 3 ? '...' : ''}`)) {
+                // Create form and submit
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{% url "inventory:bulk_archive" %}';
+                
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = 'csrfmiddlewaretoken';
+                csrfToken.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                form.appendChild(csrfToken);
+                
+                const productIds = document.createElement('input');
+                productIds.type = 'hidden';
+                productIds.name = 'product_ids';
+                productIds.value = selectedIds.join(',');
+                form.appendChild(productIds);
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+    
+    // Auto-hide messages
+    setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            alert.style.transition = 'opacity 0.5s';
+            alert.style.opacity = '0';
+            setTimeout(function() {
+                alert.style.display = 'none';
+            }, 500);
+        });
+    }, 5000);
+});
+</script>
+{% endblock %}

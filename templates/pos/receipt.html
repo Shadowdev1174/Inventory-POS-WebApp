@@ -1,0 +1,151 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Receipt #{{ sale.sale_number }} - {{ company_name|default:"Inventory POS" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media print {
+        .no-print { display: none !important; }
+        .print-only { display: block !important; }
+        body { font-size: 12px; }
+        .receipt-container { max-width: 100%; margin: 0; padding: 0; }
+    }
+    .print-only { display: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 receipt-container">
+    <!-- Header Actions -->
+    <div class="mb-6 no-print">
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-900">Receipt</h1>
+            <div class="flex space-x-3">
+                <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                    <i class="fas fa-print mr-2"></i>Print Receipt
+                </button>
+                <a href="{% url 'pos:sale_detail' sale.pk %}" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Sale
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receipt Content -->
+    <div class="bg-white rounded-lg shadow-lg p-8">
+        <!-- Store Header -->
+        <div class="text-center border-b border-gray-300 pb-6 mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">{{ company_name|default:"Inventory POS" }}</h2>
+            <p class="text-gray-600 mt-2">Walk-in Point of Sale System</p>
+            <div class="mt-3 text-sm text-gray-500">
+                <p>Receipt #{{ sale.sale_number }}</p>
+                <p>{{ sale.created_at|date:"F d, Y g:i A" }}</p>
+            </div>
+        </div>
+
+        <!-- Sale Details -->
+        <div class="mb-6">
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                    <p><strong>Cashier:</strong> {{ sale.cashier.get_full_name|default:sale.cashier.username }}</p>
+                    <p><strong>Payment Method:</strong> {{ sale.get_payment_method_display }}</p>
+                </div>
+                <div>
+                    <p><strong>Transaction ID:</strong> {{ sale.id }}</p>
+                    <p><strong>Status:</strong> {{ sale.get_status_display }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Items -->
+        <div class="border-t border-gray-300 pt-4 mb-6">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-gray-200">
+                        <th class="text-left py-2 text-sm font-medium text-gray-700">Item</th>
+                        <th class="text-center py-2 text-sm font-medium text-gray-700">Qty</th>
+                        <th class="text-right py-2 text-sm font-medium text-gray-700">Price</th>
+                        <th class="text-right py-2 text-sm font-medium text-gray-700">Total</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for item in sale.items.all %}
+                    <tr>
+                        <td class="py-3">
+                            <div class="text-sm font-medium text-gray-900">{{ item.product.name }}</div>
+                            <div class="text-xs text-gray-500">{{ item.product.category.name }}</div>
+                        </td>
+                        <td class="py-3 text-center text-sm text-gray-600">{{ item.quantity }}</td>
+                        <td class="py-3 text-right text-sm text-gray-600">${{ item.unit_price|floatformat:2 }}</td>
+                        <td class="py-3 text-right text-sm font-medium text-gray-900">${{ item.line_total|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Totals -->
+        <div class="border-t border-gray-300 pt-4">
+            <div class="space-y-2">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Subtotal:</span>
+                    <span class="text-gray-900">${{ sale.subtotal|floatformat:2 }}</span>
+                </div>
+                {% if sale.tax_amount > 0 %}
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Tax (10%):</span>
+                    <span class="text-gray-900">${{ sale.tax_amount|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+                {% if sale.discount_amount > 0 %}
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Discount:</span>
+                    <span class="text-red-600">-${{ sale.discount_amount|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+                <div class="border-t border-gray-200 pt-2">
+                    <div class="flex justify-between text-lg font-bold">
+                        <span class="text-gray-900">Total:</span>
+                        <span class="text-gray-900">${{ sale.total_amount|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Info -->
+        <div class="mt-6 pt-4 border-t border-gray-300">
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Amount Paid:</span>
+                    <span class="text-gray-900">${{ sale.amount_paid|floatformat:2 }}</span>
+                </div>
+                {% if sale.change_amount > 0 %}
+                <div class="flex justify-between font-medium">
+                    <span class="text-gray-900">Change Given:</span>
+                    <span class="text-green-600">${{ sale.change_amount|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if sale.notes %}
+        <!-- Notes -->
+        <div class="mt-6 pt-4 border-t border-gray-300">
+            <h4 class="text-sm font-medium text-gray-900 mb-2">Notes:</h4>
+            <p class="text-sm text-gray-600">{{ sale.notes }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Footer -->
+        <div class="mt-8 pt-6 border-t border-gray-300 text-center text-sm text-gray-500">
+            <p>Thank you for your business!</p>
+            <p class="mt-2">{{ sale.created_at|date:"F d, Y g:i A" }}</p>
+        </div>
+    </div>
+
+    <!-- Print Instructions -->
+    <div class="mt-6 text-center text-sm text-gray-500 no-print">
+        <p>Use your browser's print function (Ctrl+P or Cmd+P) to print this receipt.</p>
+    </div>
+</div>
+{% endblock %}
