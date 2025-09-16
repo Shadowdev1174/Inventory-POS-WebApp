@@ -1,1 +1,1 @@
-web: gunicorn INVENTORY_POS_APP.wsgi
+web: python manage.py migrate && gunicorn inventory_pos.wsgi:application --host 0.0.0.0 --port $PORT
