@@ -532,29 +532,67 @@
             width: 100%;
         }
         
-        /* Dark Mode Toggle Button Enhancement */
-        #dark-mode-toggle, #mobile-dark-mode-toggle {
-            background: linear-gradient(145deg, #f8fafc, #e2e8f0);
-            border: 1px solid #cbd5e1;
-            border-radius: 12px;
+        /* Dark Mode Toggle Button - Simple and Mobile-Friendly */
+        #dark-mode-toggle {
+            position: relative;
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
             padding: 8px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
-        #dark-mode-toggle:hover, #mobile-dark-mode-toggle:hover {
-            background: linear-gradient(145deg, #e2e8f0, #cbd5e1);
-            transform: rotate(180deg) scale(1.1);
-            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        #dark-mode-toggle:hover {
+            background: #e5e7eb;
+            border-color: #9ca3af;
         }
         
-        .dark #dark-mode-toggle, .dark #mobile-dark-mode-toggle {
-            background: linear-gradient(145deg, #374151, #4b5563);
+        #dark-mode-toggle:active {
+            transform: scale(0.95);
+        }
+        
+        .dark #dark-mode-toggle {
+            background: #374151;
             border-color: #6b7280;
         }
         
-        .dark #dark-mode-toggle:hover, .dark #mobile-dark-mode-toggle:hover {
-            background: linear-gradient(145deg, #4b5563, #6b7280);
-            box-shadow: 0 8px 20px rgba(96, 165, 250, 0.4);
+        .dark #dark-mode-toggle:hover {
+            background: #4b5563;
+            border-color: #9ca3af;
+        }
+        
+        /* Mobile Dark Mode Toggle - List Style */
+        #mobile-dark-mode-toggle {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            text-align: left;
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+        }
+        
+        #mobile-dark-mode-toggle:hover {
+            background: #f3f4f6;
+        }
+        
+        .dark #mobile-dark-mode-toggle:hover {
+            background: #374151;
+        }
+        
+        /* Dark Mode Icons */
+        #dark-mode-icon, #mobile-dark-mode-icon {
+            font-size: 16px;
+            color: #6b7280;
+        }
+        
+        .dark #dark-mode-icon, .dark #mobile-dark-mode-icon {
+            color: #d1d5db;
         }
         
         /* Form Input Enhancements */
@@ -809,8 +847,11 @@
                     <!-- Desktop User Menu -->
                     <div class="hidden lg:flex lg:items-center lg:ml-6 lg:space-x-4">
                         <!-- Dark Mode Toggle -->
-                        <button id="dark-mode-toggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200" title="Toggle Dark Mode">
-                            <i id="dark-mode-icon" class="fas fa-moon text-gray-600 dark:text-gray-300"></i>
+                        <button id="dark-mode-toggle" 
+                                class="p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" 
+                                title="Toggle Dark Mode"
+                                aria-label="Toggle dark mode">
+                            <i id="dark-mode-icon" class="fas fa-moon"></i>
                         </button>
                         
                         <!-- User Dropdown -->
@@ -885,8 +926,11 @@
                     <a href="{% url 'inventory:profile_view' %}" class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
                         <i class="fas fa-user mr-2"></i>My Profile
                     </a>
-                    <button id="mobile-dark-mode-toggle" class="w-full text-left px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
-                        <i id="mobile-dark-mode-icon" class="fas fa-moon mr-2"></i>Dark Mode
+                    <button id="mobile-dark-mode-toggle" 
+                            class="w-full text-left px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
+                            aria-label="Toggle dark mode">
+                        <i id="mobile-dark-mode-icon" class="fas fa-moon mr-3"></i>
+                        <span id="mobile-dark-mode-text">Dark Mode</span>
                     </button>
                     <a href="{% url 'accounts:logout' %}" class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
                         <i class="fas fa-sign-out-alt mr-2"></i>Sign out
@@ -1010,6 +1054,7 @@
             const mobileDarkModeToggle = document.getElementById('mobile-dark-mode-toggle');
             const darkModeIcon = document.getElementById('dark-mode-icon');
             const mobileDarkModeIcon = document.getElementById('mobile-dark-mode-icon');
+            const mobileDarkModeText = document.getElementById('mobile-dark-mode-text');
             const html = document.documentElement;
             
             // Get user's theme preference from profile or localStorage
@@ -1046,10 +1091,20 @@
                     if (darkModeIcon) {
                         darkModeIcon.classList.remove('fa-moon');
                         darkModeIcon.classList.add('fa-sun');
+                        darkModeIcon.style.color = '#fbbf24';
                     }
                     if (mobileDarkModeIcon) {
                         mobileDarkModeIcon.classList.remove('fa-moon');
                         mobileDarkModeIcon.classList.add('fa-sun');
+                        mobileDarkModeIcon.style.color = '#fbbf24';
+                    }
+                    const mobileDarkModeText = document.getElementById('mobile-dark-mode-text');
+                    if (mobileDarkModeText) {
+                        mobileDarkModeText.textContent = 'Light Mode';
+                    }
+                    if (darkModeToggle) {
+                        darkModeToggle.title = 'Switch to Light Mode';
+                        darkModeToggle.setAttribute('aria-label', 'Switch to light mode');
                     }
                 } else {
                     html.classList.add('light');
@@ -1057,10 +1112,20 @@
                     if (darkModeIcon) {
                         darkModeIcon.classList.remove('fa-sun');
                         darkModeIcon.classList.add('fa-moon');
+                        darkModeIcon.style.color = '';
                     }
                     if (mobileDarkModeIcon) {
                         mobileDarkModeIcon.classList.remove('fa-sun');
                         mobileDarkModeIcon.classList.add('fa-moon');
+                        mobileDarkModeIcon.style.color = '';
+                    }
+                    const mobileDarkModeText = document.getElementById('mobile-dark-mode-text');
+                    if (mobileDarkModeText) {
+                        mobileDarkModeText.textContent = 'Dark Mode';
+                    }
+                    if (darkModeToggle) {
+                        darkModeToggle.title = 'Switch to Dark Mode';
+                        darkModeToggle.setAttribute('aria-label', 'Switch to dark mode');
                     }
                 }
                 localStorage.setItem('theme', theme);

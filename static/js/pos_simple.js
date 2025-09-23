@@ -194,16 +194,25 @@ document.addEventListener('DOMContentLoaded', function() {
             showToast('Ready for new sale');
         }
 
-        // Cart quantity controls
+        // Cart quantity controls with enhanced throttling
         if (e.target.classList.contains('quantity-btn')) {
+            e.preventDefault(); // Prevent any default behavior
+            e.stopPropagation(); // Stop event bubbling
+            
             const cartId = e.target.dataset.cartId;
             const action = e.target.dataset.action;
             
-            // Prevent multiple rapid clicks
-            if (e.target.disabled) {
+            // Prevent multiple rapid clicks on the same button
+            if (e.target.disabled || e.target.style.pointerEvents === 'none') {
                 console.log('Button already processing...');
                 return;
             }
+            
+            // Additional visual feedback for immediate responsiveness
+            e.target.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                e.target.style.transform = 'scale(1)';
+            }, 100);
             
             if (cartId && action) {
                 await updateCartQuantity(cartId, action, e.target);
@@ -260,18 +269,33 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Update cart quantity
+    // Throttle object to prevent rapid button clicks
+    const quantityThrottle = new Map();
+
+    // Update cart quantity with improved throttling
     async function updateCartQuantity(cartId, action, buttonElement) {
+        const throttleKey = `${cartId}-${action}`;
+        
+        // Check if this cart item is already being processed
+        if (quantityThrottle.has(throttleKey)) {
+            console.log(`Throttling: ${throttleKey} already in progress`);
+            return;
+        }
+
         const quantityInput = document.querySelector(`input[data-cart-id="${cartId}"]`);
         const quantitySpan = document.querySelector(`[data-cart-id="${cartId}"] .quantity`);
         const allButtons = document.querySelectorAll(`[data-cart-id="${cartId}"].quantity-btn`);
         
         if (!quantityInput) return;
 
+        // Mark this operation as in progress
+        quantityThrottle.set(throttleKey, true);
+
         // Disable all buttons for this cart item to prevent race conditions
         allButtons.forEach(btn => {
             btn.disabled = true;
             btn.style.opacity = '0.5';
+            btn.style.pointerEvents = 'none'; // Extra protection
         });
 
         const currentQty = parseInt(quantityInput.value) || 1;
@@ -312,11 +336,19 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error updating cart quantity:', error);
             showToast('Error updating cart', 'error');
         } finally {
-            // Re-enable buttons
-            allButtons.forEach(btn => {
-                btn.disabled = false;
-                btn.style.opacity = '1';
-            });
+            // Clear throttle after a brief delay to prevent rapid successive calls
+            setTimeout(() => {
+                quantityThrottle.delete(throttleKey);
+            }, 300);
+
+            // Re-enable buttons after a short delay
+            setTimeout(() => {
+                allButtons.forEach(btn => {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = 'auto';
+                });
+            }, 200);
         }
     }
 
