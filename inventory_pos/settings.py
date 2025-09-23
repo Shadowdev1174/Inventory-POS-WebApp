@@ -300,3 +300,8 @@ COMPANY_NAME = config('COMPANY_NAME', default='Inventory POS')
 COMPANY_LOGO = config('COMPANY_LOGO', default='')
 PRIMARY_COLOR = config('PRIMARY_COLOR', default='blue')
 SECONDARY_COLOR = config('SECONDARY_COLOR', default='gray')
+
+# Production settings override for Render
+import os
+if os.environ.get('RENDER'):
+    from .production_settings import *
