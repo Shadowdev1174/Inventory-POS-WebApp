@@ -17,11 +17,37 @@ ALLOWED_HOSTS = [
 ]
 
 # Database
-DATABASES = {
-    'default': dj_database_url.parse(
-        config('DATABASE_URL', default='sqlite:///db.sqlite3')
-    )
-}
+try:
+    # Try to parse DATABASE_URL for PostgreSQL
+    database_url = config('DATABASE_URL', default=None)
+    if database_url:
+        DATABASES = {
+            'default': dj_database_url.parse(database_url)
+        }
+        # Ensure correct engine for PostgreSQL
+        if 'postgresql' in database_url or 'postgres' in database_url:
+            DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
+            # Set connection options for better compatibility
+            DATABASES['default']['OPTIONS'] = {
+                'charset': 'utf8',
+            }
+    else:
+        # Fallback to SQLite for local development
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
+except Exception as e:
+    print(f"Database configuration error: {e}")
+    # Emergency fallback to SQLite
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Static files settings for production
 STATIC_URL = '/static/'
